@@ -1,8 +1,22 @@
 #!/bin/bash
 set -euxo pipefail
-cd "$(dirname "$0")"
-if command -v apt-get >/dev/null 2>&1; then
-    sudo apt-get install -y build-essential bc bison flex libssl-dev libelf-dev zstd
-fi
+cd "$(dirname "$0")"; REPO=$PWD
 source ./BASE.env
-KERNEL_VERSION="$VERSION" exec ./scripts/build-kernel.sh
+source ../toolchain.env
+
+CCACHE_DIR="${CCACHE_DIR:-${REPO}/.ccache}"; mkdir -p "${CCACHE_DIR}"
+mkdir -p out; rm -f out/*
+
+podman run --rm \
+    -e KERNEL_VERSION="${VERSION}" \
+    -v "${REPO}:/work:Z" -w /work \
+    -v "${CCACHE_DIR}:/ccache:Z" \
+    -e CCACHE_DIR=/ccache -e CCACHE_MAXSIZE=4G \
+    --platform linux/aarch64 \
+    "${BUILDER_IMAGE}" bash -euxc '
+        dnf -y install gcc binutils make bc bison flex openssl-devel \
+            elfutils-libelf-devel zstd xz cpio patch curl perl-interpreter \
+            findutils diffutils gawk grep sed coreutils hostname gzip tar ccache
+        WORK_DIR=/tmp/armada-kernel-build OUT_DIR=/work/out \
+            bash scripts/build-kernel.sh
+    '

@@ -3,6 +3,7 @@ set -euxo pipefail
 cd "$(dirname "$0")"; REPO=$PWD
 
 source ./BASE.env
+source ../toolchain.env
 SRPM_NVR="$SRPM"
 MESA_VER="${SRPM_NVR#mesa-}"; MESA_VER="${MESA_VER%%-*}"
 # Rawhide SRPM (BASE.env pins the fcNN) rebuilt on fedora:44 for the runtime ABI.
@@ -18,7 +19,7 @@ podman run --rm \
     -v "${CCACHE_DIR}:/ccache:Z" \
     -e CCACHE_DIR=/ccache -e CCACHE_MAXSIZE=2G \
     --platform linux/aarch64 \
-    fedora:44 bash -euxc "
+    "${BUILDER_IMAGE}" bash -euxc "
         export HOME=/tmp
         dnf -y install rpm-build rpmdevtools koji 'dnf-command(builddep)' ccache
         export PATH=/usr/lib64/ccache:\$PATH CC=gcc CXX=g++

@@ -2,7 +2,7 @@ name: mesa
 on:
   push:
     branches: [main]
-    paths: ['mesa/**', 'oci/**', '.github/workflows/mesa.yml', '.github/workflows/_package-image.yml']
+    paths: ['mesa/**', 'oci/**', '.github/workflows/mesa.yml', '.github/workflows/_package-image.yml', 'toolchain.env']
   workflow_dispatch:
 permissions:
   contents: read

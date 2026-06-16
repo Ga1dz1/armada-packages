@@ -2,7 +2,7 @@ name: gamescope
 on:
   push:
     branches: [main]
-    paths: ['gamescope/**', 'oci/**', '.github/workflows/gamescope.yml', '.github/workflows/_package-image.yml']
+    paths: ['gamescope/**', 'oci/**', '.github/workflows/gamescope.yml', '.github/workflows/_package-image.yml', 'toolchain.env']
   workflow_dispatch:
 permissions:
   contents: read

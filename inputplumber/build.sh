@@ -2,9 +2,10 @@
 set -euxo pipefail
 cd "$(dirname "$0")"; REPO=$PWD
 source ./BASE.env
+source ../toolchain.env
 
 mkdir -p out; rm -f out/*
-podman run --rm -e COMMIT="${COMMIT}" -e VERSION="${VERSION}" -v "${REPO}:/work:Z" -w /work --platform linux/aarch64 fedora:44 bash -euxc '
+podman run --rm -e COMMIT="${COMMIT}" -e VERSION="${VERSION}" -v "${REPO}:/work:Z" -w /work --platform linux/aarch64 "${BUILDER_IMAGE}" bash -euxc '
     export HOME=/tmp
     dnf -y install rpm-build rpmdevtools spectool "dnf-command(builddep)" git-core
     rpmdev-setuptree

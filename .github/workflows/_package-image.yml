@@ -43,9 +43,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: ccache-${{ inputs.package }}-${{ runner.arch }}-${{ hashFiles(format('{0}/**', inputs.package)) }}
+          # hash the pinned toolchain into the key so a bump can't serve stale objects
+          key: ccache-${{ inputs.package }}-${{ runner.arch }}-${{ hashFiles('toolchain.env') }}-${{ hashFiles(format('{0}/**', inputs.package)) }}
           restore-keys: |
-            ccache-${{ inputs.package }}-${{ runner.arch }}-
+            ccache-${{ inputs.package }}-${{ runner.arch }}-${{ hashFiles('toolchain.env') }}-
 
       - name: Build artifacts
         run: cd ${{ inputs.package }} && ./build.sh

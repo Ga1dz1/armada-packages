@@ -2,7 +2,7 @@ name: extest
 on:
   push:
     branches: [main]
-    paths: ['extest/**', 'oci/**', '.github/workflows/extest.yml', '.github/workflows/_package-image.yml']
+    paths: ['extest/**', 'oci/**', '.github/workflows/extest.yml', '.github/workflows/_package-image.yml', 'toolchain.env']
   workflow_dispatch:
 permissions:
   contents: read

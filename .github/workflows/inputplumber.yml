@@ -2,7 +2,7 @@ name: inputplumber
 on:
   push:
     branches: [main]
-    paths: ['inputplumber/**', 'oci/**', '.github/workflows/inputplumber.yml', '.github/workflows/_package-image.yml']
+    paths: ['inputplumber/**', 'oci/**', '.github/workflows/inputplumber.yml', '.github/workflows/_package-image.yml', 'toolchain.env']
   workflow_dispatch:
 permissions:
   contents: read

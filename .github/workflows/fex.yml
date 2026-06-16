@@ -2,7 +2,7 @@ name: fex
 on:
   push:
     branches: [main]
-    paths: ['fex/**', 'oci/**', '.github/workflows/fex.yml', '.github/workflows/_package-image.yml']
+    paths: ['fex/**', 'oci/**', '.github/workflows/fex.yml', '.github/workflows/_package-image.yml', 'toolchain.env']
   workflow_dispatch:
 permissions:
   contents: read
