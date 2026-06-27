@@ -166,6 +166,14 @@ CONFIG_SND_SOC_AW88166=m
 # absent snd-seq spams udev at boot — Fedora's snd-pcm modprobe rule pulls it in
 CONFIG_SND_SEQUENCER=m
 
+# ============== Gaming performance (scheduler / memory / sync) ==============
+CONFIG_UCLAMP_TASK=y                         # armada-powerd sets cpu.uclamp.min per game
+CONFIG_UCLAMP_TASK_GROUP=y
+CONFIG_NTSYNC=y                              # Proton NT sync; off in arm64 defconfig
+CONFIG_LRU_GEN=y
+CONFIG_LRU_GEN_ENABLED=y                     # bare LRU_GEN only builds MGLRU, this enables it
+CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y        # not defconfig's ALWAYS, which bloats FEX RAM
+
 # ============== bootc / ostree / systemd ==============
 CONFIG_EROFS_FS=m
 CONFIG_EROFS_FS_BACKED_BY_FILE=y
