@@ -49,12 +49,16 @@ fi
 
 # ---------- 1. Fetch upstream source ----------
 SRC_TARBALL="linux-${KERNEL_VERSION}.tar.xz"
-SRC_URL="https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_MAJOR}.x/${SRC_TARBALL}"
+# Some build environments cannot fetch from cdn.kernel.org; gregkh/linux mirrors
+# the stable tags and provides a fallback source.
+SRC_URL="${KERNEL_SRC_URL:-https://cdn.kernel.org/pub/linux/kernel/v${KERNEL_MAJOR}.x/${SRC_TARBALL}}"
+SRC_URL_FALLBACK="https://github.com/gregkh/linux/archive/refs/tags/v${KERNEL_VERSION}.tar.gz"
 
 cd "${WORK_DIR}"
 if [ ! -f "${SRC_TARBALL}" ]; then
     echo "==> Downloading ${SRC_URL}"
-    curl -fsSL -O "${SRC_URL}"
+    curl -fsSL -o "${SRC_TARBALL}" "${SRC_URL}" \
+        || { echo "==> primary source failed, trying ${SRC_URL_FALLBACK}"; curl -fsSL -o "${SRC_TARBALL}" "${SRC_URL_FALLBACK}"; }
 else
     echo "==> Using cached ${SRC_TARBALL}"
 fi
@@ -66,6 +70,8 @@ else
     rm -rf "${SRC_DIR}"
     echo "==> Extracting ${SRC_TARBALL}"
     tar -xf "${SRC_TARBALL}"
+    # github archives name the top dir after the tag, not linux-<version>
+    [ -d "${SRC_DIR}" ] || mv "${WORK_DIR}/$(tar -tf "${SRC_TARBALL}" | head -1 | cut -d/ -f1)" "${SRC_DIR}"
 fi
 cd "${SRC_DIR}"
 PREFIX_MAP_FLAGS="-ffile-prefix-map=${SRC_DIR}=linux-${KERNEL_VERSION} -fdebug-prefix-map=${SRC_DIR}=linux-${KERNEL_VERSION} -fmacro-prefix-map=${SRC_DIR}=linux-${KERNEL_VERSION} -ffile-prefix-map=${WORK_DIR}=armada-kernel-build -fdebug-prefix-map=${WORK_DIR}=armada-kernel-build -fmacro-prefix-map=${WORK_DIR}=armada-kernel-build"
