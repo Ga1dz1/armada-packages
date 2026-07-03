@@ -44,6 +44,10 @@ EOF
         sed -i \"\${LAST}a Patch9001:       0001-fix-freedreno-vulkan.patch\" \"\$SPEC\"
         cp /work/patches/0002-add-a830-chip-id.patch \$HOME/rpmbuild/SOURCES/
         sed -i \"/^Patch9001:/a Patch9002:       0002-add-a830-chip-id.patch\" \"\$SPEC\"
+        cp /work/patches/0003-ir3-disable-bindless-ubo-const-lowering.patch \$HOME/rpmbuild/SOURCES/
+        sed -i \"/^Patch9002:/a Patch9003:       0003-ir3-disable-bindless-ubo-const-lowering.patch\" \"\$SPEC\"
+        sed -i \"/^%build\$/i %global build_cflags %{build_cflags} ${ARMADA_MARCH}\" \"\$SPEC\"
+        sed -i \"/^%build\$/i %global build_cxxflags %{build_cxxflags} ${ARMADA_MARCH}\" \"\$SPEC\"
 
         # two-pass: %generate_buildrequires emits a nosrc; install its BRs then build for real
         dnf -y builddep \"\$SPEC\"
