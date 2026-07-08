@@ -48,6 +48,8 @@ Source6:    build-fex-sysroot.sh
 SourceLicense: %{fex_license} %{sysroot_license}
 %endif
 
+Patch1:     0001-fexcore-aarch64-workaround-llvm18-ice.patch
+
 # Bundled dependencies managed as git submodules upstream
 # These are too entangled with the build system to unbundle for now
 # https://github.com/FEX-Emu/FEX/issues/2996
@@ -215,6 +217,9 @@ This package provides host library thunks for %{name}.
 
 # Unpack bundled libraries
 %{lua: print_setup_externals()}
+
+# patches go after the bundled-lib unpack so autopatch sees the full tree
+%autopatch -p1
 
 # Ensure library soversion is set
 sed -i FEXCore/Source/CMakeLists.txt \
