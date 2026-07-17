@@ -147,6 +147,10 @@ CONFIG_REGULATOR_FIXED_VOLTAGE=y
 CONFIG_REGULATOR_SGM3804=y
 CONFIG_BACKLIGHT_SY7758=y
 CONFIG_BACKLIGHT_ODIN2MINI=y
+# =y not =m: a modular backlight PWM provider makes the panel bind late (from
+# the rootfs). Gated by LEDS_CLASS_MULTICOLOR, which must be =y too.
+CONFIG_LEDS_CLASS_MULTICOLOR=y
+CONFIG_LEDS_QCOM_LPG=y
 
 # ============== HID stack ==============
 CONFIG_INPUT_UINPUT=y
