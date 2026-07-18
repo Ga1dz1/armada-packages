@@ -173,6 +173,8 @@ CONFIG_NTSYNC=y                              # Proton NT sync; off in arm64 defc
 CONFIG_LRU_GEN=y
 CONFIG_LRU_GEN_ENABLED=y                     # bare LRU_GEN only builds MGLRU, this enables it
 CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y        # not defconfig's ALWAYS, which bloats FEX RAM
+CONFIG_PSI=y                                 # Waydroid lmkd memory-pressure monitoring
+CONFIG_PSI_DEFAULT_DISABLED=y                # opt in with psi=1
 
 # ============== bootc / ostree / systemd ==============
 CONFIG_EROFS_FS=m
