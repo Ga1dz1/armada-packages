@@ -225,6 +225,19 @@ CONFIG_TOUCHSCREEN_CHIPONE_TDDI=m           # KONKR Pocket FIT (ICNL9922C)
 CONFIG_TOUCHSCREEN_GOODIX=m                 # Pocket S2 + Pocket DS
 CONFIG_ATH12K=m                             # WCN7850/WCN7860 Wi-Fi (SM8650 + SM8750)
 
+# ============== SM8250 (Retroid Pocket Mini V2) ==============
+CONFIG_SM_GCC_8250=y
+CONFIG_SM_DISPCC_8250=y
+CONFIG_SM_GPUCC_8250=y
+CONFIG_SM_VIDEOCC_8250=y
+CONFIG_SM_CAMCC_8250=m
+CONFIG_PINCTRL_SM8250=y
+CONFIG_INTERCONNECT_QCOM_SM8250=y
+CONFIG_INPUT_QCOM_SPMI_HAPTICS=m             # added by patches/0009-qcom-spmi-haptics.patch
+CONFIG_JOYSTICK_RETROID=m                    # added by patches/0008-retroid-gamepad.patch
+CONFIG_CHARGER_QCOM_SMB5=m                   # added by patches/0011-qcom-pm8150b-charger.patch
+CONFIG_BATTERY_QCOM_FG=m                     # added by patches/0011-qcom-pm8150b-charger.patch
+
 # ============== SM8750 (AYN Odin 3) ==============
 # gpucc is added by a patch (see patches/); the icna3520 panel reuses
 # DRM_PANEL_CHIPONE_ICNA35XX above.
