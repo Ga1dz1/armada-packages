@@ -1,0 +1,46 @@
+From: armada
+Subject: [PATCH] usb: typec: qcom_pmic_typec_pdphy, clk: qcom: alpha-pll: silence log spam
+
+Confirmed live on real SM8250 hardware: boot hangs indefinitely while
+plugged into USB-C, spamming "isr: tx_sig" from
+qcom_pmic_typec_pdphy_isr - PMIC_PDPHY_SIG_TX_IRQ fires routinely during
+normal PD signaling, but dev_err() logs every single occurrence. On a
+console/log sink that can't keep up with the fire rate, the resulting
+log storm starves other time-critical bring-up of CPU/interrupt
+bandwidth - plausibly including the DSI PLL lock sequence also reported
+failing on the same boots (drivers/clk/qcom/clk-alpha-pll.c's own "Lucid
+PLL latch failed" is the same class of routinely-retried, over-logged
+condition, in the same PLL framework SM8250's DSI PLL is built on).
+
+Cherry-picked (these two hunks only - not the rest) from ROCKNIX's own
+9999-remove-log-spam.patch (projects/ROCKNIX/devices/SM8250/patches/linux),
+which independently silenced the exact same two messages on this same
+SoC family. Neither hunk changes return values or control flow, only
+removes the log line - a genuine failure (if the retry/handshake never
+recovers) still surfaces however the caller already handles that error,
+unchanged.
+---
+diff -up a/drivers/clk/qcom/clk-alpha-pll.c b/drivers/clk/qcom/clk-alpha-pll.c
+--- a/drivers/clk/qcom/clk-alpha-pll.c
++++ b/drivers/clk/qcom/clk-alpha-pll.c
+@@ -1820,7 +1820,7 @@ static int __alpha_pll_trion_set_rate(struct clk_hw *hw, unsigned long rate,
+ 	udelay(1);
+ 	regmap_read(pll->clkr.regmap, PLL_MODE(pll), &val);
+ 	if (!(val & latch_ack)) {
+-		pr_err("Lucid PLL latch failed. Output may be unstable!\n");
++		// pr_err("Lucid PLL latch failed. Output may be unstable!\n");
+ 		return -EINVAL;
+ 	}
+ 
+diff -up a/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec_pdphy.c b/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec_pdphy.c
+--- a/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec_pdphy.c
++++ b/drivers/usb/typec/tcpm/qcom/qcom_pmic_typec_pdphy.c
+@@ -380,7 +380,7 @@ static irqreturn_t qcom_pmic_typec_pdphy_isr(int irq, void *dev_id)
+ 
+ 	switch (irq_data->virq) {
+ 	case PMIC_PDPHY_SIG_TX_IRQ:
+-		dev_err(dev, "isr: tx_sig\n");
++		// dev_err(dev, "isr: tx_sig\n");
+ 		break;
+ 	case PMIC_PDPHY_SIG_RX_IRQ:
+ 		schedule_work(&pmic_typec_pdphy->reset_work);

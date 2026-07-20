@@ -106,6 +106,7 @@ v2_20260420_neil_armstrong_arm64_qcom_sm8650_misc_enhancements.patch
 0100-revert-force-16bit-audio.patch           # sm8250.c: only force S16_LE for compressed streams, let PCM negotiate as normal
 0300-batocera-fix-headphone-jack-detection.patch  # wcd938x-sdw.c: guard IRQ handling on TX slave/irq state (shared codec, benefits SM8550+ too)
 0102-arm64-dts-qcom-pm8150-Add-nvmem-support-for-PM8150-R.patch  # pm8150.dtsi: RTC offset nvmem cell, corrects RTC drift across reboots
+9999-silence-pmic-typec-and-pll-latch-log-spam.patch  # qcom_pmic_typec_pdphy.c + clk-alpha-pll.c: confirmed live, boot hangs forever on USB-C spamming "isr: tx_sig" - log storm starves time-critical bring-up (see patch's own commit message)
 
 # ============== SM8750 (AYN Odin 3) ==============
 0026-dt-bindings-arm-qcom-ids-Add-SoC-ID-for-CQ8725S.patch
