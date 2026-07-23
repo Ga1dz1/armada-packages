@@ -301,3 +301,30 @@ CONFIG_NETFILTER_XT_MATCH_MULTIPORT=m
 CONFIG_IP_ADVANCED_ROUTER=y
 CONFIG_IP_MULTIPLE_TABLES=y
 CONFIG_WIREGUARD=m
+
+# ============== sched_ext (BPF schedulers, e.g. scx_lavd) ==============
+# Pure addition - CFS/EEVDF stays the default scheduler unless something
+# explicitly loads a BPF scheduler on top of this; sched_ext is opt-in at
+# runtime, not a replacement. Real Kconfig dependency chain (confirmed by
+# extracting this exact kernel version's own Kconfig sources):
+#   SCHED_CLASS_EXT depends on BPF_SYSCALL && BPF_JIT && DEBUG_INFO_BTF
+# BPF_SYSCALL already on above; BPF_JIT survived fine on its own.
+# DEBUG_INFO_BTF lives inside `if DEBUG_INFO` in lib/Kconfig.debug, and
+# DEBUG_INFO itself has NO prompt - it's only turned on via `select
+# DEBUG_INFO` from picking a variant in the "Debug information" choice
+# (DEBUG_INFO_NONE/DWARF_TOOLCHAIN_DEFAULT/DWARF4/DWARF5). The base
+# defconfig has DEBUG_INFO_NONE selected, so plain `CONFIG_DEBUG_INFO=y`
+# was a no-op and the whole `if DEBUG_INFO` block (including
+# DEBUG_INFO_BTF) was skipped - explains "not in final .config" with no
+# depends-chain warning pointing at DEBUG_INFO_SPLIT/REDUCED/RANDSTRUCT,
+# since those were never even evaluated. Fix: pick DWARF5 explicitly.
+CONFIG_BPF_JIT=y
+CONFIG_SCHED_CLASS_EXT=y
+# CONFIG_DEBUG_INFO_NONE is not set
+CONFIG_DEBUG_INFO_DWARF5=y
+# defconfig turns this on independently of the DWARF-choice above; it's a
+# separate bool that DEBUG_INFO_BTF explicitly requires off (depends on
+# !DEBUG_INFO_REDUCED) - the actual last blocker, confirmed via a direct
+# defconfig+merge probe against this exact kernel tree/build container.
+# CONFIG_DEBUG_INFO_REDUCED is not set
+CONFIG_DEBUG_INFO_BTF=y
