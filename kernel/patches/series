@@ -96,6 +96,7 @@ v2_20260420_neil_armstrong_arm64_qcom_sm8650_misc_enhancements.patch
 0004-pm8150b.patch                            # pm8150b.dtsi: spmi-haptics binding, dep of 0009/0013
 0009-qcom-spmi-haptics.patch                  # driver; common.dtsi references &pm8150b_haptics
 0008-retroid-gamepad.patch                    # driver; common.dtsi uart16 node is this gamepad
+1004-retroid-gamepad-suspend-resume.patch     # fixes gamepad-dead-after-resume; after 0008
 0013-add-force-feedback.patch                 # rumble — after 0008 + 0009 (patches both drivers)
 0011-qcom-pm8150b-charger.patch               # common.dtsi references &pm8150b_charger/&pm8150b_fg
 0005-sm8250-uart.patch

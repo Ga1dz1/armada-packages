@@ -1,0 +1,101 @@
+Subject: [PATCH] input: retroid: suspend and resume the gamepad MCU across system sleep
+
+Same class of bug as rsinput's own suspend/resume fix (AYN devices,
+confirmed via shuuri-labs/pocknix-os's own
+1004-input-rsinput-suspend-resume-gamepad-mcu.patch): the MCU streams
+input reports continuously over the UART. Across a system-suspend
+teardown it keeps sending, so the geni-serial RX interrupt storms while
+the port is stopping, the primary handler returns IRQ_NONE, and the
+kernel's spurious-IRQ detector permanently disables the UART IRQ - the
+gamepad is then dead after resume until reboot. This driver (0008) had no
+suspend/resume handling at all before this patch.
+
+Add PM ops: on suspend, quiesce the MCU (drop its enable rail and assert
+reset) so the line goes silent before the UART suspends; on resume,
+re-run the exact same power-up sequence and init handshake probe() uses
+(gpio dance + gamepad_send_init_sequence) rather than assuming a lighter
+resume path is enough - this MCU's init sequence is a multi-step
+handshake (see gamepad_send_init_sequence's own six-step config write),
+not just a power rail toggle.
+
+UNVERIFIED on real hardware as of this commit - the mechanism is
+well-founded (same bug class as a real, credited upstream fix for the
+sibling rsinput driver) but this needs an actual suspend/resume cycle on
+a real device to confirm the gamepad survives it, which wasn't available
+when this was written.
+---
+diff -rupbN linux.orig/drivers/input/joystick/retroid.c linux/drivers/input/joystick/retroid.c
+--- linux.orig/drivers/input/joystick/retroid.c
++++ linux/drivers/input/joystick/retroid.c
+@@ -9,6 +9,7 @@
+  */
+
+ #include <linux/delay.h>
++#include <linux/pm.h>
+ #include <linux/errno.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/init.h>
+@@ -461,6 +462,55 @@
+ 	return 0;
+ }
+
++static int gamepad_mcu_uart_suspend(struct device *dev)
++{
++	struct gamepad_device *gamepad_dev = dev_get_drvdata(dev);
++
++	/*
++	 * The MCU streams gamepad reports continuously over the UART. If it
++	 * keeps sending across the system-suspend teardown, the geni-serial
++	 * RX interrupt storms while the port is being stopped, the primary
++	 * handler returns IRQ_NONE, and the kernel's spurious-IRQ detector
++	 * permanently disables the UART IRQ - leaving the gamepad dead after
++	 * resume until the IRQ is re-requested (i.e. reboot). Quiesce the MCU
++	 * (drop its enable rail, hold it in reset) so the line goes silent
++	 * before the UART suspends; resume() re-powers and re-initialises it.
++	 */
++	if (gamepad_dev->enable_gpio)
++		gpiod_set_value_cansleep(gamepad_dev->enable_gpio, 0);
++
++	if (gamepad_dev->reset_gpio)
++		gpiod_set_value_cansleep(gamepad_dev->reset_gpio, 0);
++
++	return 0;
++}
++
++static int gamepad_mcu_uart_resume(struct device *dev)
++{
++	struct gamepad_device *gamepad_dev = dev_get_drvdata(dev);
++	struct serdev_device *serdev = to_serdev_device(dev);
++
++	if (gamepad_dev->reset_gpio)
++		gpiod_set_value_cansleep(gamepad_dev->reset_gpio, 0);
++
++	msleep(100);
++
++	if (gamepad_dev->enable_gpio)
++		gpiod_set_value_cansleep(gamepad_dev->enable_gpio, 1);
++
++	if (gamepad_dev->reset_gpio)
++		gpiod_set_value_cansleep(gamepad_dev->reset_gpio, 1);
++
++	msleep(100);
++
++	gamepad_send_init_sequence(serdev);
++
++	return 0;
++}
++
++static DEFINE_SIMPLE_DEV_PM_OPS(gamepad_mcu_uart_pm_ops,
++				gamepad_mcu_uart_suspend, gamepad_mcu_uart_resume);
++
+ static const struct of_device_id gamepad_mcu_uart_of_match[] = {
+ 	{ .compatible = "retroid,retroid-pocket-gamepad" },
+ 	{}
+@@ -470,6 +520,7 @@
+ static struct serdev_device_driver gamepad_mcu_uart_driver = {
+ 	.driver = {
+ 		.name = DRIVER_NAME,
++		.pm = pm_sleep_ptr(&gamepad_mcu_uart_pm_ops),
+ 		.of_match_table = gamepad_mcu_uart_of_match,
+ 	},
+ 	.probe = gamepad_mcu_uart_probe,
