@@ -1,0 +1,130 @@
+Subject: [PATCH] input: retroid: stretch the Guide button's release edge
+
+Ported from shuuri-labs/pocknix-os's own
+0018-retroid-gamepad-home-pulse-stretch.patch, written to let InputPlumber
+chord Guide+A into a Quick Access Menu open on the Flip2 (no physical back
+button on that board - see armada's own
+retroid_flip2_qam_chord.yaml/01-retroid-flip2-controller.yaml).
+
+The MCU firmware reports BTN_MODE (Guide) as a fixed ~150ms pulse
+regardless of how long it's physically held - it never reports a real
+press-then-later-release, just press immediately followed by release
+~150ms later no matter what. That's too short a window for InputPlumber's
+evdev chord matcher (or any other chord scheme) to reliably catch a
+second button pressed alongside it. This adds a home_pulse_stretch_ms
+module param (default 0 = raw passthrough, unchanged behavior): when
+nonzero, the release edge is deferred by that many milliseconds via a
+delayed_work instead of being reported the instant the MCU's bit clears,
+stretching the Guide-button-down window downstream without changing
+anything about how the physical button itself behaves. A fresh press
+before the deferred release fires cancels it, so holding the button
+across two MCU pulses in a row can't produce a stray false release in
+the middle.
+
+Defaults to 0 (off) for every device: this changes real Guide-button
+release timing, and pocknix-os's own 400ms figure (used only on Flip2 by
+armada, via armada-device-quirks) was validated on their RP5 via a
+userspace uinput shim, not on real Flip2 hardware. Runtime-tunable
+(0660) rather than a compile-time constant so it can be scoped to one
+device model without a kernel rebuild.
+
+Must apply after 0013-add-force-feedback.patch (both touch struct
+gamepad_device and gamepad_mcu_uart_probe - see patches/series). Applying
+cleanly was verified mechanically: materialized retroid.c through
+0008 + 1004 + 0013, hand-edited a copy with these exact changes, and
+regenerated this diff from the two real files rather than hand-counting
+hunk headers, then re-applied it to a fresh copy to confirm a byte-
+identical result.
+
+UNVERIFIED on real hardware as of this commit, same as pocknix-os's own -
+needs an actual Flip2 device (evtest/InputPlumber logs during the chord)
+to confirm the chosen stretch value is long enough without also merging
+distinct human button presses together.
+---
+diff -rupbN linux.orig/drivers/input/joystick/retroid.c linux/drivers/input/joystick/retroid.c
+--- linux.orig/drivers/input/joystick/retroid.c
++++ linux/drivers/input/joystick/retroid.c
+@@ -11,6 +11,7 @@
+
+ #include <linux/delay.h>
+ #include <linux/pm.h>
++#include <linux/workqueue.h>
+ #include <linux/errno.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/init.h>
+@@ -63,6 +64,7 @@
+ 	struct gpio_desc *reset_gpio;
+ 	struct input_dev *dev_input;
+ 	struct platform_device *platform_dev;
++	struct delayed_work home_release_work;
+ };
+
+ static bool rumble_enable = true;
+@@ -116,6 +118,13 @@
+
+ module_param(update_params,int,0660);
+
++/* 0 = off (raw passthrough, unchanged behavior). See patch header for why
++ * this defaults off and is scoped per-device via device-quirks instead of
++ * a compile-time default. */
++static int home_pulse_stretch_ms=0;
++module_param(home_pulse_stretch_ms,int,0660);
++MODULE_PARM_DESC(home_pulse_stretch_ms, "Defer the Guide/Home button's release edge by this many ms (0 = off)");
++
+ module_param(trigger_left_max,int,0660);
+ module_param(trigger_left_deadzone,int,0660);
+ module_param(trigger_left_antideadzone,int,0660);
+@@ -196,6 +205,18 @@
+ 	msleep(100);
+ }
+
++static void gamepad_home_release_work_fn(struct work_struct *work)
++{
++	struct gamepad_device *dev = container_of(to_delayed_work(work),
++						  struct gamepad_device,
++						  home_release_work);
++
++	if (dev->dev_input) {
++		input_report_key(dev->dev_input, BTN_MODE, 0);
++		input_sync(dev->dev_input);
++	}
++}
++
+ static void gamepad_input_handler(struct gamepad_device *dev,
+ 				  struct gamepad_data *data)
+ {
+@@ -246,7 +267,24 @@
+ 	bitmap_xor(&changes, &current_states, &prev_states, ARRAY_SIZE(keymap));
+
+ 	for_each_set_bit(i, &changes, ARRAY_SIZE(keymap)) {
+-		input_report_key(indev, keymap[i], (current_states & BIT(i)));
++		bool pressed = !!(current_states & BIT(i));
++
++		if (keymap[i] == BTN_MODE && home_pulse_stretch_ms > 0) {
++			if (pressed) {
++				/* A fresh press cancels any deferred release
++				 * still pending from the previous pulse, so
++				 * two pulses back-to-back can't produce a
++				 * stray false release in between. */
++				cancel_delayed_work(&dev->home_release_work);
++				input_report_key(indev, BTN_MODE, 1);
++			} else {
++				schedule_delayed_work(&dev->home_release_work,
++					msecs_to_jiffies(home_pulse_stretch_ms));
++				continue;
++			}
++		} else {
++			input_report_key(indev, keymap[i], pressed);
++		}
+ 	}
+
+ 	int16_t value;
+@@ -383,6 +421,8 @@
+ 	if (!gamepad_dev)
+ 		return dev_err_probe(dev, -ENOMEM, "could not allocate memory for device data\n");
+
++	INIT_DELAYED_WORK(&gamepad_dev->home_release_work, gamepad_home_release_work_fn);
++
+ 	gamepad_dev->boot_gpio =
+ 		devm_gpiod_get_optional(dev, "boot", GPIOD_OUT_HIGH);
+ 	if (IS_ERR(gamepad_dev->boot_gpio)) {

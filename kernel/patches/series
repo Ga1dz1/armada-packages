@@ -98,6 +98,7 @@ v2_20260420_neil_armstrong_arm64_qcom_sm8650_misc_enhancements.patch
 0008-retroid-gamepad.patch                    # driver; common.dtsi uart16 node is this gamepad
 1004-retroid-gamepad-suspend-resume.patch     # fixes gamepad-dead-after-resume; after 0008
 0013-add-force-feedback.patch                 # rumble — after 0008 + 0009 (patches both drivers)
+1005-retroid-gamepad-home-pulse-stretch.patch # Flip2 Guide+A QAM chord support; after 0008+1004+0013
 0011-qcom-pm8150b-charger.patch               # common.dtsi references &pm8150b_charger/&pm8150b_fg
 0005-sm8250-uart.patch
 9998-gpu-opp-table.patch                      # sm8250.dtsi GPU OPP fix (670MHz was wrong/unsupported)
