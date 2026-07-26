@@ -1,0 +1,40 @@
+Subject: [PATCH] pmdomain: qcom: rpmhpd: don't clamp GMU-managed rails pre-sync_state
+
+Ported from ROCKNIX/distribution's own
+0121-pmdomain-qcom-rpmhpd-no-max-clamp-on-gmu-rails.patch (SM8550
+device patch set). Marks gfx/gmxc state_synced from boot so pre-sync
+votes use the real lowest corner instead of an inflated safety clamp.
+These rails carry no bootloader state and have no other consumers, so
+the clamp protects nothing on them - it only holds the Adreno 740 GPU
+(RP6, AYN Odin 2, AYANEO Pocket ACE/DMG/S2K) to an artificially high
+minimum power-domain corner until genpd's state sync completes early
+in boot.
+
+Complements 0120 (GPU_CC power-domain plumbing in the DTS, already in
+this tree) rather than conflicting with it - that patch describes the
+power-domain wiring in sm8550.dtsi, this one changes the driver's
+pre-sync_state clamping behavior for those same two rails.
+
+Context (struct rpmhpd gfx/gmxc definitions) verified against current
+torvalds/linux drivers/pmdomain/qcom/rpmhpd.c - identical field layout,
+no existing armada patch touches this file.
+---
+diff --git a/drivers/pmdomain/qcom/rpmhpd.c b/drivers/pmdomain/qcom/rpmhpd.c
+--- a/drivers/pmdomain/qcom/rpmhpd.c
++++ b/drivers/pmdomain/qcom/rpmhpd.c
+@@ -120,6 +120,7 @@ static struct rpmhpd gbx = {
+ static struct rpmhpd gfx = {
+ 	.pd = { .name = "gfx", },
+ 	.res_name = "gfx.lvl",
++	.state_synced = true,
+ };
+
+ static struct rpmhpd lcx = {
+@@ -225,6 +226,7 @@ static struct rpmhpd qphy = {
+ static struct rpmhpd gmxc = {
+ 	.pd = { .name = "gmxc", },
+ 	.res_name = "gmxc.lvl",
++	.state_synced = true,
+ };
+
+ /* Eliza RPMH powerdomains */
