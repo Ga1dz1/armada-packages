@@ -16,29 +16,11 @@
 0057_DDIC-CH13726A-panel.patch
 0062-gpu-drm-panel-add-wt0630-panel.patch
 0104-drm-panel-Add-Retroid-Pocket-6-panel.patch
-# 0105 fixes the tearing/horizontal-line artifact on RP6 by correcting the
-# panel refresh commands (0x59/0x6C) to match the Android reference.
+# 0105 aligns the RP6 Visionox VTDR6130 init sequence with the Android
+# reference: correct 0x59/0x6C refresh commands, B1 timing registers, PPS
+# sent before the B1 block, no extra C9/CE page, and all init commands sent
+# as DCS long writes (packet type 0x39) matching the stock firmware.
 0105-drm-panel-vtdr6130-rp6-fix-refresh-command.patch
-# 0106-0117 were tested individually and in groups; most break boot or make
-# the artifact worse. 0110/0111 are superseded by keeping 0105 alone.
-#0106-drm-panel-vtdr6130-rp6-disable-dsc.patch
-#0107-drm-panel-vtdr6130-rp6-fix-timings.patch
-#0108-drm-panel-vtdr6130-rp6-fix-b1.patch
-#0109-drm-panel-vtdr6130-rp6-align-init-sequence.patch
-#0110-drm-panel-vtdr6130-rp6-re-enable-dsc.patch
-#0111-drm-panel-vtdr6130-rp6-use-dcs-writes.patch
-#0112-drm-msm-dpu-panel-opt-in-8bpc-dither.patch
-# 0113 (slice_height=20): tested 2026-07-27 - WORSE, stripes across the whole
-# screen. Panel really decodes with slice_height=12 despite the vendor PPS
-# saying 20. Keeping it out of the series.
-#0113-drm-panel-vtdr6130-rp6-dsc-slice-height-20.patch
-# 0114 (EOT) tested 2026-07-27 as part of 0105-0112+0114-0117 - black screen.
-# Not needed once 0105 alone fixes the artifact.
-#0114-drm-panel-vtdr6130-rp6-enable-eot-packet.patch
-# 0115-0117 (slice_per_pkt=2) tested 2026-07-27 - black screen.
-#0115-drm-mipi-dsi-add-slice_per_pkt.patch
-#0116-drm-msm-dsi-use-slice_per_pkt.patch
-#0117-drm-panel-vtdr6130-rp6-set-slice-per-pkt-2.patch
 
 # ============== Panel power + backlight ==============
 0058_AYN-Odin2-Mini--backlight.patch
