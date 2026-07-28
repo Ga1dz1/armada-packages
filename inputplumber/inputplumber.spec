@@ -15,8 +15,7 @@ Summary:        Input router and remapper daemon for handheld gaming devices
 License:        GPL-3.0-or-later
 URL:            %{forgeurl}
 Source0:        %{forgeurl}/archive/%{commit}/%{name}-%{commit}.tar.gz
-Patch1:         0001-fix-CapabilityMap-preserve-signed-axis-button-mappin.patch
-Patch2:         0002-fix-gamepad-honor-passthrough-config-skip-exclusive-grab.patch
+Patch1:         0002-fix-gamepad-honor-passthrough-config-skip-exclusive-grab.patch
 
 BuildRequires:  cargo
 BuildRequires:  rust
