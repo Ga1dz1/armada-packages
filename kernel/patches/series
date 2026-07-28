@@ -16,10 +16,11 @@
 0057_DDIC-CH13726A-panel.patch
 0062-gpu-drm-panel-add-wt0630-panel.patch
 0104-drm-panel-Add-Retroid-Pocket-6-panel.patch
-# 0105 aligns the RP6 Visionox VTDR6130 init sequence with the Android
-# reference: correct 0x59/0x6C refresh commands, B1 timing registers, PPS
-# sent before the B1 block, no extra C9/CE page, and all init commands sent
-# as DCS long writes (packet type 0x39) matching the stock firmware.
+# 0105 reduces the right-edge motion artifact on RP6 by changing the
+# Visionox VTDR6130 refresh commands: 0x59=0x00 and 0x6C=0x01. The larger
+# Android-reference rework (DCS writes, B1, PPS order, C9/CE removal) made
+# the whole screen artifact, so it is reverted; keep only the minimal 0x59/0x6C
+# change while a better reference sequence is investigated.
 0105-drm-panel-vtdr6130-rp6-fix-refresh-command.patch
 
 # ============== Panel power + backlight ==============
