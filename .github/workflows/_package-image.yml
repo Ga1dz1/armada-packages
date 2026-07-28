@@ -32,6 +32,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Prepare environment
+        run: echo "IMAGE=${IMAGE,,}" >> "$GITHUB_ENV"
+
       - name: Tooling
         run: |
           sudo apt-get update -y && sudo apt-get install -y podman buildah ccache
