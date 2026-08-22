@@ -332,3 +332,6 @@ CONFIG_DEBUG_INFO_DWARF5=y
 # defconfig+merge probe against this exact kernel tree/build container.
 # CONFIG_DEBUG_INFO_REDUCED is not set
 CONFIG_DEBUG_INFO_BTF=y
+# pocknix SDR104 stack (patches 0210-0212): downstream sdhci-msm with the
+# working DLL/HSR tuning path; RP6's sdhc_2 node binds to it.
+CONFIG_MMC_SDHCI_MSM_DOWNSTREAM=y

@@ -80,10 +80,13 @@ v6_20260210_quic_utiwari_crypto_qce_add_runtime_pm_and_interconnect_bandwidth_sc
 0102-20240424_wuxilin123_ayn_odin_2_support.patch
 0103_arm64--dts--qcom--sm8550--add-UART15.patch
 0120-20250728_konradybcio_gpu_cc_power_requirements_reality_check.patch
-0121-pmdomain-qcom-rpmhpd-no-max-clamp-on-gmu-rails.patch
+0121-pmdomain-qcom-rpmhpd-presync-floor-gmu-rails.patch  # rpmhpd.c: floor gfx/gmxc at lowest functional corner pre-sync_state (ROCKNIX SM8650 variant; ACD calibrates against real levels)
 0122-interconnect__qcom__sm8550__Enable_QoS_configuration.patch
 0154-dts-qcom-sm8550-add-opp-acd-level.patch
 0200-ASoC-wcd938x-add-DMIC-DAPM-inputs.patch
+0210-mmc-add-qcom-downstream-sdhci-msm-driver.patch  # pocknix sm8550: downstream sdhci-msm, SDR104 UHS-I on SD (13->85MB/s)
+0211-mmc-sdhci-msm-downstream-drop-sdhci_pltfm_free.patch  # pocknix: follow-up fix to 0210
+0212-Revert-clk-qcom-gcc-sm8550-Use-floor-ops-for-SDCC-RCGs.patch  # pocknix: floor ops break SDCC rates for SDR104
 
 # ============== System tweaks ==============
 0500-ROCKNIX-set-boot-fanspeed.patch
@@ -108,7 +111,7 @@ v2_20260420_neil_armstrong_arm64_qcom_sm8650_misc_enhancements.patch
 1005-retroid-gamepad-home-pulse-stretch.patch # Flip2 Guide+A QAM chord support; after 0008+1004+0013
 0011-qcom-pm8150b-charger.patch               # common.dtsi references &pm8150b_charger/&pm8150b_fg
 0005-sm8250-uart.patch
-9998-gpu-opp-table.patch                      # sm8250.dtsi GPU OPP fix (670MHz was wrong/unsupported)
+9998-gpu-tuning.patch                         # ROCKNIX SM8250: KonaBess freq ladder to 925MHz + ACD + gfx-mem interconnect votes (supersedes our 855MHz OPP fix)
 0001-msm-dsi-restore-wide_bus-bpp-calculation.patch
 0012-ASoC-qcom-q6asm-dai-Change-some-default-periods.patch  # q6asm-dai.c: PLAYBACK_M{IN,AX}_PERIOD_SIZE 65536/128 -> 7168/8; crackling without this
 0062_wsa881x-shared-powerdown-gpio.patch      # wsa881x.c: powerdown gpio is shared by both WSA881x amps, must be requested non-exclusive
