@@ -226,3 +226,16 @@ to a commit, or `armada` if it's original; a URL source with no `notes` is verba
 - `dts/sm8650-konkr-pf.dts.patch`
   source: https://github.com/ROCKNIX/distribution/commit/242e3d0840cbe865fb152277e0feaca9ce48caef#diff-b5707cd5abd5a9b2bb7de35a0e9870e9c0c3ae9d71cb74166afbb438f4353606
   notes: edits dts/sm8650-konkr-pf.dts
+- `patches/9998-gpu-tuning.patch`
+  source: https://github.com/ROCKNIX/distribution/blob/next/projects/ROCKNIX/devices/SM8250/patches/linux/9998-gpu-tuning.patch
+  notes: replaces our 9998-gpu-opp-table.patch (855MHz tier) — KonaBess ladder to 925MHz + ACD + gfx-mem interconnect votes
+- `patches/0121-pmdomain-qcom-rpmhpd-presync-floor-gmu-rails.patch`
+  source: https://github.com/ROCKNIX/distribution/blob/next/projects/ROCKNIX/devices/SM8650/patches/linux/0121-pmdomain-qcom-rpmhpd-presync-floor-gmu-rails.patch
+  notes: replaces our 0121 no-max-clamp variant — floors gfx/gmxc at the lowest functional corner pre-sync_state so ACD calibrates against real levels
+- `patches/0210-mmc-add-qcom-downstream-sdhci-msm-driver.patch`
+  source: https://github.com/shuuri-labs/pocknix-os/blob/main/kernel/sm8550/patches/20-sm8550/0210-mmc-add-qcom-downstream-sdhci-msm-driver.patch
+- `patches/0211-mmc-sdhci-msm-downstream-drop-sdhci_pltfm_free.patch`
+  source: https://github.com/shuuri-labs/pocknix-os/blob/main/kernel/sm8550/patches/20-sm8550/0211-mmc-sdhci-msm-downstream-drop-sdhci_pltfm_free.patch
+- `patches/0212-Revert-clk-qcom-gcc-sm8550-Use-floor-ops-for-SDCC-RCGs.patch`
+  source: https://github.com/shuuri-labs/pocknix-os/blob/main/kernel/sm8550/patches/20-sm8550/0212-Revert-clk-qcom-gcc-sm8550-Use-floor-ops-for-SDCC-RCGs.patch
+  notes: 0210-0212 together enable UHS-I SDR104 on the RP6 microSD slot (~13->85MB/s); dts/qcs8550-retroidpocket-rp6.dts sdhc_2 node switched to the downstream binding (block ported from pocknix's same-named DTS)
