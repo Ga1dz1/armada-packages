@@ -16,3 +16,11 @@ to a commit, or `armada` if it's original; a URL source with no `notes` is verba
   source: https://github.com/ROCKNIX/distribution/blob/d5991e155a1941c248c8bcb9b364723eec75fc61/projects/ROCKNIX/packages/apps/gamescope/patches/0005-feature-add-rotation-shader-for-rotating-output.patch
 - `patches/0006-steamcompmgr-fix-gamepad-cursor-sprite-frozen-via-XTest.patch`
   source: https://github.com/ROCKNIX/distribution/blob/e108ad2b8971b4e332d7457b75dd21dadb666d19/projects/ROCKNIX/packages/apps/gamescope/patches/0006-steamcompmgr-fix-gamepad-cursor-sprite-frozen-via-XTest.patch
+- `patches/0014-drm-add-force-external-orientation.patch`
+  source: armada
+  notes: Adds `--force-external-orientation` mirroring `--force-orientation`, but
+    applied to the external connector in `CDRMConnector::UpdateEffectiveOrientation`.
+    With `--use-rotation-shader` (patch 0005) this rotates a portrait-mounted-
+    landscape panel (Retroid Dual Screen, EDID 1080x1920 only) and also fixes
+    touch mapping, since wlserver transforms touch by the active connector's
+    orientation.

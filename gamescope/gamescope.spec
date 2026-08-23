@@ -39,6 +39,7 @@ Patch:          0010-drm-compose-gamma22-hdr-without-hardware-color-management.p
 Patch:          0011-wsi-filter-hdr-formats-by-underlying-support.patch
 Patch:          0012-color-scale-sdr-white-on-gamma22-hdr-output.patch
 Patch:          0013-expose-client-sampleable-formats.patch
+Patch:          0014-drm-add-force-external-orientation.patch
 
 BuildRequires:  cmake
 BuildRequires:  catch-devel
