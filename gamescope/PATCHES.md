@@ -24,3 +24,12 @@ to a commit, or `armada` if it's original; a URL source with no `notes` is verba
     landscape panel (Retroid Dual Screen, EDID 1080x1920 only) and also fixes
     touch mapping, since wlserver transforms touch by the active connector's
     orientation.
+- `patches/0015-wlserver-offset-external-touch-180-with-force-external-orientation.patch`
+  source: armada
+  notes: When `--force-external-orientation` (patch 0014) is active, offsets the
+    touch transform of the EXTERNAL connector by 180 degrees. The udev hwdb
+    calibration for portrait-mounted-landscape panels (Retroid Dual Screen,
+    USB 222a:0001) aligns the digitizer with the desktop stack (kwin's output
+    transform), which sits exactly 180 degrees apart from what gamescope's
+    connector-orientation touch transform expects; this makes one hwdb matrix
+    serve both game mode and desktop.
