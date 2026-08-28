@@ -1,0 +1,222 @@
+From d3d1280095174f5ab171c7a76c2afc335e37c802 Mon Sep 17 00:00:00 2001
+From: armada <armada@local>
+Date: Fri, 28 Aug 2026 02:36:29 -0700
+Subject: [PATCH] feat(touchscreen): add deck_trackpads mode to evdev driver
+
+Adds an optional 'mode' field to TouchscreenConfig. When set to
+"deck_trackpads", the evdev touchscreen source splits the screen
+horizontally into two virtual Steam Deck trackpads: x < 0.5 maps to the
+left pad (pad_x = x*2), x >= 0.5 to the right pad (pad_x = (x-0.5)*2),
+pad_y = y. Each dirty contact emits Capability::Touchpad(LeftPad/RightPad,
+Touch::Motion) with a normalized InputValue::Touch, and
+Touch::Button(TouchButton::Touch) is emitted on pad touching transitions.
+Only the first touch (lowest slot index) on each half is processed.
+get_capabilities() reports the Touchpad capabilities in this mode so the
+composite device routes them to the deck-uhid target's l_pad_*/r_pad_*
+state. Default mode (unset or "touchscreen") is unchanged.
+---
+ src/config/mod.rs                     |   8 ++
+ src/input/source/evdev/touchscreen.rs | 118 +++++++++++++++++++++++++-
+ 2 files changed, 125 insertions(+), 1 deletion(-)
+
+diff --git a/src/config/mod.rs b/src/config/mod.rs
+index f62a9eb..a917061 100644
+--- a/src/config/mod.rs
++++ b/src/config/mod.rs
+@@ -305,6 +305,14 @@ pub struct TouchscreenConfig {
+     /// instead of the size advertised by the device itself.
+     #[serde(skip_serializing_if = "Option::is_none")]
+     pub override_source_size: Option<bool>,
++    /// Operating mode of the touchscreen source device. Can be one of:
++    /// ["touchscreen", "deck_trackpads"]. If unset, "touchscreen" is used and
++    /// the device behaves as a regular touchscreen. In "deck_trackpads" mode,
++    /// the touchscreen is split horizontally into two virtual Steam Deck
++    /// trackpads that emit Touchpad capabilities instead of Touchscreen
++    /// capabilities.
++    #[serde(skip_serializing_if = "Option::is_none")]
++    pub mode: Option<String>,
+ }
+ 
+ #[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
+diff --git a/src/input/source/evdev/touchscreen.rs b/src/input/source/evdev/touchscreen.rs
+index ae8d8b5..96016cc 100644
+--- a/src/input/source/evdev/touchscreen.rs
++++ b/src/input/source/evdev/touchscreen.rs
+@@ -11,7 +11,7 @@ use nix::fcntl::{FcntlArg, OFlag};
+ 
+ use crate::config::capability_map::CapabilityMapConfigV2;
+ use crate::config::TouchscreenConfig;
+-use crate::input::capability::Touch;
++use crate::input::capability::{Touch, TouchButton, Touchpad};
+ use crate::input::event::evdev::translator::EventTranslator;
+ use crate::input::event::value::InputValue;
+ use crate::{
+@@ -45,6 +45,23 @@ impl From<&str> for Orientation {
+     }
+ }
+ 
++/// Operating mode of the touchscreen source device
++#[derive(Debug, Clone, Copy, Default, PartialEq)]
++enum TouchscreenMode {
++    #[default]
++    Touchscreen,
++    DeckTrackpads,
++}
++
++impl From<&str> for TouchscreenMode {
++    fn from(value: &str) -> Self {
++        match value {
++            "deck_trackpads" => Self::DeckTrackpads,
++            _ => Self::Touchscreen,
++        }
++    }
++}
++
+ /// TouchState represents the state of a single touch
+ #[derive(Debug, Clone)]
+ struct TouchState {
+@@ -104,10 +121,13 @@ pub struct TouchscreenEventDevice {
+     device: Device,
+     translator: Option<EventTranslator>,
+     orientation: Orientation,
++    mode: TouchscreenMode,
+     axes_info: HashMap<AbsoluteAxisCode, AbsInfo>,
+     touch_state: [TouchState; 10], // NOTE: Max of 10 touch inputs
+     dirty_states: HashSet<usize>,
+     last_touch_idx: usize,
++    pad_slots: [Option<usize>; 2],  // Active touch index per pad (0=left, 1=right)
++    pad_touching: [bool; 2],        // Touching state per pad for button transitions
+ }
+ 
+ impl TouchscreenEventDevice {
+@@ -182,17 +202,28 @@ impl TouchscreenEventDevice {
+             };
+         log::debug!("Configured touchscreen orientation: {orientation:?}");
+ 
++        // Configure the operating mode of the touchscreen
++        let mode = config
++            .as_ref()
++            .and_then(|c| c.mode.as_ref())
++            .map(|m| TouchscreenMode::from(m.as_str()))
++            .unwrap_or_default();
++        log::debug!("Configured touchscreen mode: {mode:?}");
++
+         // Create an event translator if a capability map was given
+         let translator = capability_map.map(|map| EventTranslator::new(&map, axes_info.clone()));
+ 
+         Ok(Self {
+             device,
+             orientation,
++            mode,
+             translator,
+             axes_info,
+             touch_state: Default::default(),
+             dirty_states: HashSet::with_capacity(10),
+             last_touch_idx: 0,
++            pad_slots: [None, None],
++            pad_touching: [false, false],
+         })
+     }
+ 
+@@ -209,6 +240,80 @@ impl TouchscreenEventDevice {
+             EventSummary::Synchronization(_, SynchronizationCode::SYN_REPORT, _) => {
+                 let mut events = Vec::with_capacity(self.dirty_states.len());
+ 
++                // In deck_trackpads mode, split the touchscreen horizontally into
++                // two virtual trackpads and emit touchpad capabilities instead of
++                // touchscreen capabilities.
++                if self.mode == TouchscreenMode::DeckTrackpads {
++                    let mut dirty: Vec<usize> = self.dirty_states.drain().collect();
++                    dirty.sort_unstable();
++
++                    // Process dirty touch states in ascending index order so only
++                    // the first touch on each half of the screen is handled.
++                    for idx in dirty {
++                        let Some(touch) = self.touch_state.get(idx) else {
++                            continue;
++                        };
++
++                        // Rotate values based on config
++                        let rotated_touch = touch.rotate(self.orientation);
++
++                        // Determine which half of the screen the touch is on
++                        let is_left = rotated_touch.x < 0.5;
++                        let side = if is_left { 0 } else { 1 };
++                        let pad_x = if is_left {
++                            rotated_touch.x * 2.0
++                        } else {
++                            (rotated_touch.x - 0.5) * 2.0
++                        };
++                        let pad_y = rotated_touch.y;
++
++                        // Ignore touches on a pad that already has an active touch
++                        if let Some(active_idx) = self.pad_slots[side] {
++                            if active_idx != idx {
++                                continue;
++                            }
++                        }
++
++                        // Update the active touch slot for this pad
++                        if rotated_touch.is_touching {
++                            self.pad_slots[side] = Some(idx);
++                        } else {
++                            self.pad_slots[side] = None;
++                        }
++
++                        let pad = if is_left {
++                            Touchpad::LeftPad
++                        } else {
++                            Touchpad::RightPad
++                        };
++
++                        // Emit a touch button event whenever the touching state changes
++                        if self.pad_touching[side] != rotated_touch.is_touching {
++                            self.pad_touching[side] = rotated_touch.is_touching;
++                            let event = NativeEvent::new(
++                                Capability::Touchpad(pad(Touch::Button(TouchButton::Touch))),
++                                InputValue::Bool(rotated_touch.is_touching),
++                            );
++                            events.push(event);
++                        }
++
++                        // Emit motion for the pad
++                        let event = NativeEvent::new(
++                            Capability::Touchpad(pad(Touch::Motion)),
++                            InputValue::Touch {
++                                index: 0,
++                                is_touching: rotated_touch.is_touching,
++                                pressure: Some(rotated_touch.pressure),
++                                x: Some(pad_x),
++                                y: Some(pad_y),
++                            },
++                        );
++                        events.push(event);
++                    }
++
++                    return events;
++                }
++
+                 // Send events for any dirty touch states
+                 for idx in self.dirty_states.drain() {
+                     let Some(touch) = self.touch_state.get_mut(idx) else {
+@@ -377,6 +482,17 @@ impl SourceInputDevice for TouchscreenEventDevice {
+ 
+     /// Returns the possible input events this device is capable of emitting
+     fn get_capabilities(&self) -> Result<Vec<Capability>, InputError> {
++        // In deck_trackpads mode, the device emits touchpad capabilities for
++        // two virtual trackpads instead of touchscreen capabilities.
++        if self.mode == TouchscreenMode::DeckTrackpads {
++            return Ok(vec![
++                Capability::Touchpad(Touchpad::LeftPad(Touch::Motion)),
++                Capability::Touchpad(Touchpad::LeftPad(Touch::Button(TouchButton::Touch))),
++                Capability::Touchpad(Touchpad::RightPad(Touch::Motion)),
++                Capability::Touchpad(Touchpad::RightPad(Touch::Button(TouchButton::Touch))),
++            ]);
++        }
++
+         Ok(vec![Capability::Touchscreen(Touch::Motion)])
+     }
+ }
+-- 
+2.43.0
+

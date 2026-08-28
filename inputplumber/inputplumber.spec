@@ -16,6 +16,7 @@ License:        GPL-3.0-or-later
 URL:            %{forgeurl}
 Source0:        %{forgeurl}/archive/%{commit}/%{name}-%{commit}.tar.gz
 Patch1:         0002-fix-gamepad-honor-passthrough-config-skip-exclusive-grab.patch
+Patch2:         0003-feat-touchscreen-deck-trackpads-mode.patch
 
 BuildRequires:  cargo
 BuildRequires:  rust
