@@ -21,3 +21,4 @@ to a commit, or `armada` if it's original; a URL source with no `notes` is verba
   uinput touchscreen node) to VIRT_DEVICE_WHITELIST in src/input/manager.rs so
   the manager stops skipping it as a virtual device and composite configs can
   claim it as a touchscreen source.
+
