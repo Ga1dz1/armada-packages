@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000004 Mon Sep 17 00:00:00 2001
+From: armada <armada@localhost>
+Date: Fri, 28 Aug 2026 00:00:00 +0000
+Subject: [PATCH] feat(manager): whitelist Nebel virtual touchscreen
+
+NebelOS runs a userspace daemon that creates a rotated internal-panel
+pass-through uinput touchscreen node named "Nebel Trackpad Screen". It
+lives under /devices/virtual/input, so Manager::run's "input" subsystem
+branch discards it as a virtual device before composite device configs
+(01-retroid-controller.yaml) can claim it as a touchscreen source:
+"Nebel Trackpad Screen (eventN) is virtual, skipping consideration".
+
+The node is virtual but explicitly created by us to be managed by
+InputPlumber, so add its name to VIRT_DEVICE_WHITELIST alongside the
+existing Sunshine virtual pad entries.
+---
+ src/input/manager.rs | 5 ++++++
+ 1 file changed, 5 insertions(+)
+
+--- a/src/input/manager.rs
++++ b/src/input/manager.rs
+@@ -65,6 +65,11 @@
+     "Sunshine gamepad (virtual) motion sensors",
+     "Sunshine Nintendo (virtual) pad",
+     "MSI WMI hotkeys",
++    // NebelOS: rotated internal-panel pass-through uinput node, created by our
++    // userspace daemon and matched as a touchscreen source by
++    // 01-retroid-controller.yaml. It is virtual but explicitly created by us
++    // to be managed by InputPlumber.
++    "Nebel Trackpad Screen",
+ ];
+ 
+ #[derive(Error, Debug)]

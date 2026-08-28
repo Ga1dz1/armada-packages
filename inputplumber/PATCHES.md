@@ -15,3 +15,9 @@ to a commit, or `armada` if it's original; a URL source with no `notes` is verba
   trackpads, emitting `Capability::Touchpad(LeftPad/RightPad, ...)` consumed by
   the deck-uhid target instead of `Capability::Touchscreen(...)`. Default mode
   is unchanged.
+- `patches/0004-feat-manage-whitelisted-nebel-virtual-touchscreen.patch`
+  source: armada
+  notes: adds "Nebel Trackpad Screen" (our rotated internal-panel pass-through
+  uinput touchscreen node) to VIRT_DEVICE_WHITELIST in src/input/manager.rs so
+  the manager stops skipping it as a virtual device and composite configs can
+  claim it as a touchscreen source.
