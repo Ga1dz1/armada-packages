@@ -65,7 +65,13 @@ jobs:
           TAG="$(date -u +%Y%m%d)-${GITHUB_SHA::8}"
           buildah build -f oci/Containerfile -t "${IMAGE}:${TAG}" .
           buildah tag "${IMAGE}:${TAG}" "${IMAGE}:latest"
-          echo "${{ secrets.GITHUB_TOKEN }}" | buildah login -u "${{ github.actor }}" --password-stdin ghcr.io
+          # GITHUB_TOKEN is repo-scoped and can be denied write_package on a user-account
+          # package it is not linked to; the owner PAT (write:packages) is the fallback.
+          if [ -n "${{ secrets.PACKAGES_WRITE_TOKEN }}" ]; then
+            echo "${{ secrets.PACKAGES_WRITE_TOKEN }}" | buildah login -u "${{ github.actor }}" --password-stdin ghcr.io
+          else
+            echo "${{ secrets.GITHUB_TOKEN }}" | buildah login -u "${{ github.actor }}" --password-stdin ghcr.io
+          fi
           buildah push "${IMAGE}:${TAG}"
           buildah push --digestfile /tmp/digest "${IMAGE}:latest"
           DIGEST="$(cat /tmp/digest)"
