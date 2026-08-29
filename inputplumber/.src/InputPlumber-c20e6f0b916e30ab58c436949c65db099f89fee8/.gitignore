@@ -1,0 +1,5 @@
+/target
+/.cache
+/dist
+/settings.mk
+/.vscode

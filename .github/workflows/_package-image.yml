@@ -88,5 +88,10 @@ jobs:
         uses: sigstore/cosign-installer@v3
       - name: Sign image (cosign keyless)
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | cosign login ghcr.io -u "${{ github.actor }}" --password-stdin
+          # Same repo-scoped GITHUB_TOKEN issue as buildah login above.
+          if [ -n "${{ secrets.PACKAGES_WRITE_TOKEN }}" ]; then
+            echo "${{ secrets.PACKAGES_WRITE_TOKEN }}" | cosign login ghcr.io -u "${{ github.actor }}" --password-stdin
+          else
+            echo "${{ secrets.GITHUB_TOKEN }}" | cosign login ghcr.io -u "${{ github.actor }}" --password-stdin
+          fi
           cosign sign --yes "${IMAGE}@${{ steps.push.outputs.digest }}"

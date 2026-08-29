@@ -1,0 +1,139 @@
+/// Events that can be emitted by the Legion Go controller
+#[derive(Clone, Debug)]
+pub enum Event {
+    GamepadButton(GamepadButtonEvent),
+    TouchButton(TouchButtonEvent),
+    Axis(AxisEvent),
+    Trigger(TriggerEvent),
+}
+
+/// Binary input contain either pressed or unpressed
+#[derive(Clone, Debug)]
+pub struct BinaryInput {
+    pub pressed: bool,
+}
+
+/// Axis input contain (x, y) coordinates
+#[derive(Clone, Debug)]
+pub struct TouchAxisInput {
+    pub index: u8,
+    pub is_touching: bool,
+    pub x: u16,
+    pub y: u16,
+}
+
+/// Axis input contain (x, y) coordinates
+#[derive(Clone, Debug)]
+pub struct JoyAxisInput {
+    pub x: u8,
+    pub y: u8,
+}
+/// IMU Axis input contain (x, y, z) coordinates
+#[derive(Clone, Debug)]
+pub struct ImuAxisInput {
+    pub pitch: i16,
+    pub roll: i16,
+    pub yaw: i16,
+}
+
+/// Mouse Wheel contains negative integars
+#[derive(Clone, Debug)]
+pub struct MouseWheelInput {
+    pub value: i8,
+}
+
+/// Trigger input contains non-negative integars
+#[derive(Clone, Debug)]
+pub struct TriggerInput {
+    pub value: u8,
+}
+
+/// Button events represend binary inputs
+#[derive(Clone, Debug)]
+pub enum GamepadButtonEvent {
+    /// A Button
+    A(BinaryInput),
+    /// X Button
+    X(BinaryInput),
+    /// B Button
+    B(BinaryInput),
+    /// Y Button
+    Y(BinaryInput),
+    /// Hamburger (☰) button (Right controller Legion Go 2)
+    Menu(BinaryInput),
+    /// Overlapping square ⧉  button (Left controller Legion Go 2)
+    View(BinaryInput),
+    /// Legion button on left controller
+    Legion(BinaryInput),
+    /// Quick Access button on right controller
+    QuickAccess(BinaryInput),
+    /// DPad down
+    DPadDown(BinaryInput),
+    /// DPad up
+    DPadUp(BinaryInput),
+    /// DPad left
+    DPadLeft(BinaryInput),
+    /// DPad right
+    DPadRight(BinaryInput),
+    /// Left shoulder button
+    LB(BinaryInput),
+    /// Binary sensor for left analog trigger
+    DTriggerL(BinaryInput),
+    /// Z-axis button on the left stick
+    ThumbL(BinaryInput),
+    /// Y1 on the back of the left gamepad
+    Y1(BinaryInput),
+    /// Y2 on the back of the left gamepad
+    Y2(BinaryInput),
+    /// Y3 on the back of the right gamepad
+    Y3(BinaryInput),
+    /// Right shoulder button
+    RB(BinaryInput),
+    /// Binary sensor for right analog trigger
+    DTriggerR(BinaryInput),
+    /// Z-axis button on the right stick
+    ThumbR(BinaryInput),
+    /// M1 on the side of the right controller
+    M1(BinaryInput),
+    /// M2 on the side of the right controller
+    M2(BinaryInput),
+    /// M3 on the back of the right controller
+    M3(BinaryInput),
+    /// Mouse wheel click on the back of the right controller
+    MouseClick(BinaryInput),
+    // Legion Go 2 Only
+    /// Show Desktop, 11 small squares icon immedialy below dpad.
+    ShowDesktop(BinaryInput),
+    /// Alt Tab, squares and rectangles icon below show desktop button.
+    AltTab(BinaryInput),
+}
+
+/// Button events represend binary inputs
+#[derive(Clone, Debug)]
+pub enum TouchButtonEvent {
+    /// Tap to click button
+    Left(BinaryInput),
+}
+
+/// Axis events are events that have (x, y) values
+#[derive(Clone, Debug)]
+pub enum AxisEvent {
+    Touchpad(TouchAxisInput),
+    LStick(JoyAxisInput),
+    RStick(JoyAxisInput),
+    LeftAccel(ImuAxisInput),
+    LeftGyro(ImuAxisInput),
+    RightAccel(ImuAxisInput),
+    RightGyro(ImuAxisInput),
+    MultiAccel(ImuAxisInput),
+    MultiGyro(ImuAxisInput),
+}
+
+/// Trigger events contain values indicating how far a trigger is pulled
+#[derive(Clone, Debug)]
+pub enum TriggerEvent {
+    ATriggerL(TriggerInput),
+    ATriggerR(TriggerInput),
+    MouseWheel(MouseWheelInput),
+    RpadForce(TriggerInput),
+}
