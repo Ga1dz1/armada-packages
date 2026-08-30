@@ -1,7 +1,9 @@
+GPU tuning for SM8250: frequency ladder, ACD, and memory bandwidth.
+
+
 1. Overclock and use KonaBess frequency lader
-Matches speedbin extracted from stock firmware and includes extra steps in the
-ladder that are exposed in android by KonaBess mod. The ladder is capped at
-875 MHz - the 925 MHz step showed rendering artifacts on Mini V2 hardware.
+Matches speedbin extracted from stock firmware and included extra steps in the
+ladder that are exposed in android by KonaBess mod.
 
 
 2. Enalbe ACD
@@ -31,8 +33,8 @@ on battery life.
  			gpu_opp_table: opp-table {
  				compatible = "operating-points-v2";
 +
-+				opp-875000000 {
-+					opp-hz = /bits/ 64 <875000000>;
++				opp-925000000 {
++					opp-hz = /bits/ 64 <925000000>;
 +					opp-level = <RPMH_REGULATOR_LEVEL_TURBO_L1>;
 +					opp-supported-hw = <0xb>;
 +					qcom,opp-acd-level = <0x802b5ffd>;
