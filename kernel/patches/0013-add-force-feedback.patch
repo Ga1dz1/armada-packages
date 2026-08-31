@@ -105,10 +105,11 @@ index 58714577a053..97e9c7a6cbfe 100644
  	serdev_device_set_client_ops(serdev, &gamepad_mcu_uart_client_ops);
  
  	gamepad_send_init_sequence(serdev);
-@@ -482,3 +533,4 @@ MODULE_DESCRIPTION("Gamepad driver for Retroid Pocket");
+@@ -482,4 +533,5 @@ MODULE_DESCRIPTION("Gamepad driver for Retroid Pocket");
  MODULE_AUTHOR("Molly Sophia <mollysophia379@gmail.com>");
  MODULE_AUTHOR("BigfootACA <bigfoot@classfun.cn>");
  MODULE_AUTHOR("Teguh Sobirin <teguh@sobir.in>");
+ MODULE_ALIAS("platform:" DRIVER_NAME);
 +MODULE_AUTHOR("ROCKNIX Team <admin@rocknix.org>");
 diff --git a/drivers/input/misc/qcom-spmi-haptics.c b/drivers/input/misc/qcom-spmi-haptics.c
 index 64ef78ec1821..96e6e8c73980 100644

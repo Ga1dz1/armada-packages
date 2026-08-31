@@ -26,7 +26,7 @@ diff -rupbN linux.orig/drivers/input/joystick/Makefile linux/drivers/input/joyst
 diff -rupbN linux.orig/drivers/input/joystick/retroid.c linux/drivers/input/joystick/retroid.c
 --- linux.orig/drivers/input/joystick/retroid.c	1970-01-01 00:00:00.000000000 +0000
 +++ linux/drivers/input/joystick/retroid.c	2024-12-18 16:08:54
-@@ -0,0 +1,484 @@
+@@ -0,0 +1,500 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Driver for Retroid Pocket Gamepad
@@ -325,10 +325,25 @@ diff -rupbN linux.orig/drivers/input/joystick/retroid.c linux/drivers/input/joys
 +{
 +	struct device *dev = &serdev->dev;
 +	struct gamepad_data recv_data_buffer;
++	u16 data_len;
 +	u8 checksum;
 +
-+	if (!data || count < 7) {
++	if (!data || count < 8) {
 +		dev_warn_ratelimited(dev, "invalid packet");
++		return count;
++	}
++
++	/* Packet layout: 4-byte header, frame, command, 2-byte length,
++	 * payload, 1-byte checksum. serdev hands us arbitrary chunks;
++	 * after UART garbage (e.g. on resume) a misaligned chunk can
++	 * carry a huge bogus length — without these checks the memcpy
++	 * below overflows the stack buffer and kills the ldisc worker
++	 * (observed as a dead gamepad + kernel oops).
++	 */
++	data_len = data[6] | (data[7] << 8);
++	if (data_len > MAX_DATA_LEN || count < (size_t)data_len + 9) {
++		dev_warn_ratelimited(dev, "malformed packet (len %u, count %zu)",
++				     data_len, count);
 +		return count;
 +	}
 +
@@ -341,7 +356,7 @@ diff -rupbN linux.orig/drivers/input/joystick/retroid.c linux/drivers/input/joys
 +	memcpy(recv_data_buffer.header, data, 4);
 +	recv_data_buffer.frame_number = *(data + 4);
 +	recv_data_buffer.command = *(data + 5);
-+	recv_data_buffer.data_len = *(data + 6) | (*(data + 7) << 8);
++	recv_data_buffer.data_len = data_len;
 +
 +	if (recv_data_buffer.data_len) {
 +		memset(&recv_data_buffer.data[0], 0,

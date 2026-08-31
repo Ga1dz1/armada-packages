@@ -22,3 +22,12 @@ to a commit, or `armada` if it's original; a URL source with no `notes` is verba
   the manager stops skipping it as a virtual device and composite configs can
   claim it as a touchscreen source.
 
+- `patches/0005-feat-rp6-paddles-virtual-pad-into-ayn-composite.patch`
+  source: armada
+  notes: adds "Nebel RP6 Paddles" (the virtual gamepad node created by
+  /usr/libexec/nebel/nebel-gpio-keys, vid 0x222A pid 0x0004, BTN_C/BTN_Z
+  pass-through) to VIRT_DEVICE_WHITELIST in src/input/manager.rs so the
+  manager stops skipping it as a virtual device. The vendored
+  02-ayn-controller.yaml in the image adds a matching evdev source
+  (vendor_id 222a product_id 0004) that maps BTN_C/BTN_Z via the existing
+  ayn_mcu capability map to RightPaddle1/LeftPaddle1 (L4/R4).
