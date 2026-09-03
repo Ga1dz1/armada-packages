@@ -20,6 +20,7 @@ Patch2:         0002-fix-force-feedback-reset-effects-when-replacing-targets.pat
 Patch3:         0003-feat-touchscreen-deck-trackpads-mode.patch
 Patch4:         0004-feat-manage-whitelisted-nebel-virtual-touchscreen.patch
 Patch5:         0005-feat-rp6-paddles-virtual-pad-into-ayn-composite.patch
+Patch6:         0006-feat-emulate-real-steam-deck-neptune-ids.patch
 
 BuildRequires:  cargo
 BuildRequires:  rust
