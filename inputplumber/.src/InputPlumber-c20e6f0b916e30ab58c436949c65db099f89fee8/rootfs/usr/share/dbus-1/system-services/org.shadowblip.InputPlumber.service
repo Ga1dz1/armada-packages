@@ -1,4 +1,0 @@
-[D-BUS Service]
-Name=com.github.guelfey.Demo
-User=${USER}
-Exec=/tmp/dbus-demo-server
