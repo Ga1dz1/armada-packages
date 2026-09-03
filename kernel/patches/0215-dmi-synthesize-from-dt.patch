@@ -1,0 +1,125 @@
+--- a/drivers/firmware/dmi_scan.c	2026-06-01 08:54:55.000000000 -0700
++++ b/drivers/firmware/dmi_scan.c	2026-09-03 10:51:38.151002391 -0700
+@@ -8,6 +8,7 @@
+ #include <linux/efi.h>
+ #include <linux/memblock.h>
+ #include <linux/random.h>
++#include <linux/of.h>
+ #include <asm/dmi.h>
+ #include <linux/unaligned.h>
+ 
+@@ -670,6 +671,105 @@
+ 	return 1;
+ }
+ 
++/*
++ * Nebel: Qualcomm handheld boot flows (XBL/ABL) provide no SMBIOS table at
++ * all, leaving /sys/class/dmi/id/ empty and userspace (Steam's system
++ * page, support tools) showing "Unknown" for BIOS and board identity. When
++ * no firmware DMI was found, synthesize a minimal table from the device
++ * tree model string and feed it through the normal decode path, so the
++ * identity machinery works exactly like on hardware with real SMBIOS.
++ */
++static int __init dmi_synthesize_from_dt(void)
++{
++	static u8 table[512];
++	u8 *p = table, *f;
++	const char *model, *sp;
++	char vendor[64];
++	struct dmi_header *h;
++
++	if (!IS_ENABLED(CONFIG_OF))
++		return -ENOENT;
++
++	model = of_get_property(of_root, "model", NULL);
++	if (!model || !*model)
++		return -ENOENT;
++
++	/* vendor = model up to the first space, product = the rest */
++	sp = strchr(model, ' ');
++	if (sp && sp != model) {
++		snprintf(vendor, sizeof(vendor), "%.*s", (int)(sp - model), model);
++		model = sp + 1;
++	} else {
++		strscpy(vendor, "Nebel", sizeof(vendor));
++	}
++
++	/* Type 0 - BIOS: the real boot firmware here is Qualcomm XBL/ABL. */
++	h = (struct dmi_header *)p;
++	h->type = 0;
++	h->length = 0x14;
++	h->handle = 0;
++	f = p + sizeof(*h);
++	memset(f, 0, 0x14 - sizeof(*h));
++	f[0] = 1;	/* vendor string index */
++	f[1] = 2;	/* version string index */
++	f[4] = 3;	/* release date string index */
++	p += 0x14;
++	p += sprintf(p, "Nebel") + 1;
++	p += sprintf(p, "ABL") + 1;
++	p += sprintf(p, "01/01/2026") + 1;
++	*p++ = 0;
++
++	/* Type 1 - System: vendor/product from the DT model string. */
++	h = (struct dmi_header *)p;
++	h->type = 1;
++	h->length = 0x08;
++	h->handle = 1;
++	f = p + sizeof(*h);
++	memset(f, 0, 0x08 - sizeof(*h));
++	f[0] = 1;	/* manufacturer */
++	f[1] = 2;	/* product name */
++	f[2] = 3;	/* version */
++	f[3] = 4;	/* serial */
++	p += 0x08;
++	p += sprintf(p, "%s", vendor) + 1;
++	p += sprintf(p, "%s", model) + 1;
++	p += sprintf(p, "1.0") + 1;
++	p += sprintf(p, "0") + 1;
++	*p++ = 0;
++
++	/* Type 2 - Baseboard: same identity. */
++	h = (struct dmi_header *)p;
++	h->type = 2;
++	h->length = 0x08;
++	h->handle = 2;
++	f = p + sizeof(*h);
++	memset(f, 0, 0x08 - sizeof(*h));
++	f[0] = 1;
++	f[1] = 2;
++	p += 0x08;
++	p += sprintf(p, "%s", vendor) + 1;
++	p += sprintf(p, "%s", model) + 1;
++	*p++ = 0;
++
++	/* Type 127 - end of table. */
++	h = (struct dmi_header *)p;
++	h->type = 127;
++	h->length = 4;
++	h->handle = 0xffff;
++	p += 4;
++	*p++ = 0;
++
++	dmi_base = virt_to_phys(table);
++	dmi_len = p - table;
++	dmi_num = 4;
++	dmi_ver = 0x030200;
++	if (dmi_walk_early(dmi_decode))
++		return -EIO;
++	pr_info("DMI: no firmware SMBIOS, synthesized from DT (%s %s)\n",
++		vendor, model);
++	return 0;
++}
++
+ static void __init dmi_scan_machine(void)
+ {
+ 	char __iomem *p, *q;
+@@ -758,6 +858,8 @@
+ 		dmi_early_unmap(p, 0x10000);
+ 	}
+  error:
++	if (!dmi_available && !dmi_synthesize_from_dt())
++		return;
+ 	pr_info("DMI not present or invalid.\n");
+ }
+ 

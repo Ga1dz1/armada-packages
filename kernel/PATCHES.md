@@ -239,3 +239,9 @@ to a commit, or `armada` if it's original; a URL source with no `notes` is verba
 - `patches/0212-Revert-clk-qcom-gcc-sm8550-Use-floor-ops-for-SDCC-RCGs.patch`
   source: https://github.com/shuuri-labs/pocknix-os/blob/main/kernel/sm8550/patches/20-sm8550/0212-Revert-clk-qcom-gcc-sm8550-Use-floor-ops-for-SDCC-RCGs.patch
   notes: 0210-0212 together enable UHS-I SDR104 on the RP6 microSD slot (~13->85MB/s); dts/qcs8550-retroidpocket-rp6.dts sdhc_2 node switched to the downstream binding (block ported from pocknix's same-named DTS)
+- `patches/0214-arm64-cpuinfo-model-name.patch`
+  source: nebel
+  notes: prints "model name" (Cortex-X3/A715/... via MIDR table) in /proc/cpuinfo for 64-bit readers; Steam System page CPU field
+- `patches/0215-dmi-synthesize-from-dt.patch`
+  source: nebel
+  notes: synthesizes minimal DMI (BIOS/System/Board) from the DT model when the boot flow provides no SMBIOS (all our Qualcomm handhelds); Steam System page BIOS/board fields. Compile-tested against 7.0.11

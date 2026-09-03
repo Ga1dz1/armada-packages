@@ -1,0 +1,67 @@
+--- a/arch/arm64/kernel/cpuinfo.c	2026-06-01 08:54:55.000000000 -0700
++++ b/arch/arm64/kernel/cpuinfo.c	2026-09-03 10:50:54.249002370 -0700
+@@ -211,6 +211,46 @@
+ };
+ #endif /* CONFIG_COMPAT */
+ 
++/*
++ * Nebel: map MIDR implementer/part to a marketing core name so 64-bit
++ * userspace reading /proc/cpuinfo (lscpu, Steam's system page, games)
++ * sees a real "model name" instead of nothing. Unknown parts fall back
++ * to no line (upstream behavior). Parts are the mainline MIDR values.
++ */
++static const struct {
++	u32 implementer;
++	u32 part;
++	const char *name;
++} midr_part_names[] = {
++	{ 0x41, 0xd05, "Cortex-A55" },
++	{ 0x41, 0xd0d, "Cortex-A77" },
++	{ 0x41, 0xd0e, "Cortex-A76" },
++	{ 0x41, 0xd41, "Cortex-A78" },
++	{ 0x41, 0xd44, "Cortex-X1" },
++	{ 0x41, 0xd46, "Cortex-A510" },
++	{ 0x41, 0xd47, "Cortex-A710" },
++	{ 0x41, 0xd48, "Cortex-X2" },
++	{ 0x41, 0xd4d, "Cortex-A715" },
++	{ 0x41, 0xd4e, "Cortex-X3" },
++	{ 0x41, 0xd80, "Cortex-A520" },
++	{ 0x41, 0xd81, "Cortex-A720" },
++	{ 0x41, 0xd82, "Cortex-X4" },
++	{ 0x41, 0xd85, "Cortex-X925" },
++	{ 0x41, 0xd87, "Cortex-A725" },
++	{ 0x51, 0x001, "Oryon" },
++};
++
++static const char *midr_part_name(u32 midr)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(midr_part_names); i++)
++		if (midr_part_names[i].implementer == MIDR_IMPLEMENTOR(midr) &&
++		    midr_part_names[i].part == MIDR_PARTNUM(midr))
++			return midr_part_names[i].name;
++	return NULL;
++}
++
+ static int c_show(struct seq_file *m, void *v)
+ {
+ 	int j;
+@@ -218,6 +258,7 @@
+ 	bool compat = personality(current->personality) == PER_LINUX32;
+ 	struct cpuinfo_arm64 *cpuinfo = v;
+ 	u32 midr = cpuinfo->reg_midr;
++	const char *part_name;
+ 
+ 	/*
+ 	 * glibc reads /proc/cpuinfo to determine the number of
+@@ -228,6 +269,9 @@
+ 	if (compat)
+ 		seq_printf(m, "model name\t: ARMv8 Processor rev %d (%s)\n",
+ 			   MIDR_REVISION(midr), COMPAT_ELF_PLATFORM);
++	else if ((part_name = midr_part_name(midr)))
++		seq_printf(m, "model name\t: %s rev %d (aarch64)\n",
++			   part_name, MIDR_REVISION(midr));
+ 
+ 	seq_printf(m, "BogoMIPS\t: %lu.%02lu\n",
+ 		   loops_per_jiffy / (500000UL/HZ),
