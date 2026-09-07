@@ -1,0 +1,35 @@
+From: Luke Johnson <jaewun@me.com>
+Subject: [PATCH] arm64: dts: qcom: qcs8550-ayn: add s2idle power states
+
+Board-level suspend constraints for the SM8550 sleep stack: power the
+gamepad MCU BOB rail off in suspend, switch the retained 1.8 V rail to LPM.
+Turned into RPMh SLEEP/WAKE TCS votes by 0518/0519.
+
+(thorch 0006, hunks 1-2 only; the pcieport0 wake-gpios polarity hunk is
+dropped - our dtsi carries no wake-gpios/reset-gpios on pcieport0.)
+---
+--- a/arch/arm64/boot/dts/qcom/qcs8550-ayn-common.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs8550-ayn-common.dtsi
+@@ -597,6 +597,10 @@
+ 			regulator-min-microvolt = <2720000>;
+ 			regulator-max-microvolt = <3960000>;
+ 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++
++			regulator-state-mem {
++				regulator-off-in-suspend;
++			};
+ 		};
+ 
+ 		vreg_l2b_3p0: ldo2 {
+@@ -704,6 +708,11 @@
+ 			regulator-allow-set-load;
+ 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
+ 						   RPMH_REGULATOR_MODE_HPM>;
++
++			regulator-state-mem {
++				regulator-on-in-suspend;
++				regulator-mode = <RPMH_REGULATOR_MODE_LPM>;
++			};
+ 		};
+ 
+ 		vreg_l16b_2p8: ldo16 {

@@ -43,6 +43,7 @@
 0031_input--Add-driver-for-RSInput-Gamepad.patch
 0508-input-rsinput-add-pm-resume-to-reinit-mcu-after-suspend.patch
 0515-input-rsinput-reassemble-uart-frames-instead-of-dropping-them.patch  # armada-os: buffer+resync RX instead of dropping on checksum mismatch (dead gamepad after wake)
+0516-input-rsinput-handshake-mcu-version-on-init.patch  # pocknix: version-request handshake + retries instead of blind msleeps (params cmd lost on unlucky resume -> dead gamepad)
 1006-tty-serial-qcom-geni-mask-non-console-irq-on-suspend.patch  # armada-os: mask streaming-UART IRQ across suspend (irq storm "nobody cared" -> dead port)
 0504-Enable-64-bit-processes-to-use-compat-input-syscalls.patch
 0506-usbcore-add-interrupt-interval-override.patch
@@ -54,6 +55,7 @@
 1000-add-qcom-haptics-driver.patch
 1002-haptics-driver-support-periodic-sine-and-fixes.patch
 1003-rsinput-add-ff.patch          # rumble — keep after 1000/1002 (patches qcom-hv-haptics.c) and before 1300
+1007-input-qcom-haptics-defer-rsinput-playback.patch  # pocknix: move rsinput FF playback to a workqueue ("scheduling while atomic" on rumble); after 1003
 1300-input-rsinput-ranges.patch
 
 # ============== Audio ==============
@@ -74,7 +76,10 @@
 20260424_neil_armstrong_arm64_dts_qcom_sm8_456_50_add_missing_cx_power_domain_to_gcc.patch
 v6_20260210_quic_utiwari_crypto_qce_add_runtime_pm_and_interconnect_bandwidth_scaling_support.patch
 0504-mailbox-qcom-ipcc-mask-summary-irq-for-suspend-to-ram.patch  # armada-os: supersedes our IRQF_NO_SUSPEND removal - mask only for s2ram, keep doorbell in s2idle
+0512-PCI-qcom-skip-L23-ready-poll-on-SM8550.patch  # armada-os: PARF_LTSSM unreadable after PME_Turn_Off - suspend wedge; fixed delay instead
 0513-PCI-qcom-honour-an-opp-suspend-opp-as-the-non-s2ram-memory-floor.patch  # armada-os: PCIe suspend-opp floor (s2ram power)
+0518-regulator-qcom-rpmh-add-suspend-state-support.patch  # pocknix: regulator-state-mem SLEEP/WAKE TCS votes (rails drop in s2idle -> sleep drain fix)
+0519-regulator-core-apply-mem-state-for-s2idle.patch  # pocknix: map PM_SUSPEND_TO_IDLE onto the rpmh mem state (DT half pending in ayn-common dtsi)
 0520-arm64-dts-qcom-sm8550-add-a-pcie-suspend-opp.patch  # armada-os: DT half of 0513
 0204-thermal-qcom-tsens-mask-lower-threshold-irqs-across-suspend.patch  # armada-os: tsens lower-threshold IRQ off across suspend (spurious wake)
 0505-msm_gem-lock-before-put_iova_spaces.patch
