@@ -40,6 +40,13 @@ Patch:          0011-wsi-filter-hdr-formats-by-underlying-support.patch
 Patch:          0012-color-scale-sdr-white-on-gamma22-hdr-output.patch
 Patch:          0013-expose-client-sampleable-formats.patch
 Patch:          0014-drm-add-force-external-orientation.patch
+Patch:          0015-drm-split-scanout.patch
+Patch:          0016-drm-split-scanout-per-half-rotation.patch
+Patch:          0017-drm-dual-desktop.patch
+Patch:          0018-fix-arm64-steam-night-mode.patch
+Patch:          0019-main-add-opt-in-force-vulkan-realtime.patch
+Patch:          0020-color-fall-back-to-app-hdr-metadata-for-tonemapping.patch
+Patch:          0021-wsi-layer-pass-through-display-surface-swapchains.patch
 
 BuildRequires:  cmake
 BuildRequires:  catch-devel
