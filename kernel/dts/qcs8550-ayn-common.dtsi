@@ -961,6 +961,68 @@
 	};
 };
 
+/* GPU overclock ladder for the whole qcs8550 family (Odin 2 / Mini /
+ * Portal / Thor / RP6). Values are the same as the Ayaneo Pocket boards
+ * already carry in qcs8550-ayaneo-pocket-common.dtsi (from pocknix).
+ * Mainline sm8550.dtsi tops the A740 at 680 MHz @ SVS_L1 ("Speedbin needs
+ * more work on A740+"); these extend it up to 1 GHz @ TURBO_L2. The OC
+ * points are NOT reachable by default: nebel-powerd clamps auto profiles
+ * to the 680 MHz stock ceiling (STOCK_GPU_CAP), only an explicit manual
+ * GPU clock can go higher. The mainline 85C passive devfreq throttle on
+ * the GPU stays in force regardless.
+ * Also adds the vendor-characterized 124.8 MHz low point from the AYN Thor
+ * Android DT (pocknix 1051), matching the GMU DCVS range. */
+&gpu_opp_table {
+	opp-124800000 {
+		opp-hz = /bits/ 64 <124800000>;
+		opp-level = <RPMH_REGULATOR_LEVEL_LOW_SVS_D2>;
+		opp-peak-kBps = <2136718>;
+		qcom,opp-acd-level = <0xc02f5ffd>;
+	};
+
+	opp-719000000 {
+		opp-hz = /bits/ 64 <719000000>;
+		opp-level = <RPMH_REGULATOR_LEVEL_SVS_L2>;
+		opp-peak-kBps = <10687500>; /* Level 7 */
+		qcom,opp-acd-level = <0x882e5ffd>;
+	};
+
+	opp-746000000 {
+		opp-hz = /bits/ 64 <746000000>;
+		opp-level = <RPMH_REGULATOR_LEVEL_NOM>;
+		opp-peak-kBps = <10687500>; /* Level 7 */
+		qcom,opp-acd-level = <0x882e5ffd>;
+	};
+
+	opp-794000000 {
+		opp-hz = /bits/ 64 <794000000>;
+		opp-level = <RPMH_REGULATOR_LEVEL_NOM_L1>;
+		opp-peak-kBps = <14398438>; /* Level 8 */
+		qcom,opp-acd-level = <0xa82d5ffd>;
+	};
+
+	opp-827000000 {
+		opp-hz = /bits/ 64 <827000000>;
+		opp-level = <RPMH_REGULATOR_LEVEL_TURBO>;
+		opp-peak-kBps = <16500000>; /* Level 9 */
+		qcom,opp-acd-level = <0xa82d5ffd>;
+	};
+
+	opp-860000000 {
+		opp-hz = /bits/ 64 <860000000>;
+		opp-level = <RPMH_REGULATOR_LEVEL_TURBO_L1>;
+		opp-peak-kBps = <16500000>; /* Level 9 */
+		qcom,opp-acd-level = <0x882d5ffd>;
+	};
+
+	opp-1000000000 {
+		opp-hz = /bits/ 64 <1000000000>;
+		opp-level = <RPMH_REGULATOR_LEVEL_TURBO_L2>;
+		opp-peak-kBps = <16500000>; /* Level 9 */
+		qcom,opp-acd-level = <0x882d5ffd>;
+	};
+};
+
 &i2c0 {
 	clock-frequency = <400000>;
 	status = "okay";
