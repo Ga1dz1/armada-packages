@@ -19,8 +19,6 @@ Patch1:         0001-fix-gamepad-honor-passthrough-config-skip-exclusive-grab.pa
 Patch2:         0002-fix-force-feedback-reset-effects-when-replacing-targets.patch
 Patch3:         0003-feat-touchscreen-deck-trackpads-mode.patch
 Patch4:         0004-feat-manage-whitelisted-nebel-virtual-touchscreen.patch
-Patch5:         0005-feat-rp6-paddles-virtual-pad-into-ayn-composite.patch
-Patch6:         0006-feat-emulate-real-steam-deck-neptune-ids.patch
 
 BuildRequires:  cargo
 BuildRequires:  rust
@@ -45,9 +43,9 @@ Requires:       dbus
 InputPlumber detects, manages, and routes input from handheld gaming devices,
 including combining devices into a single virtual gamepad. The Armada fork adds
 support for gamepad-source 'passthrough' and resets force-feedback effects when
-replacing or suspending virtual targets. Nebel OS additionally carries:
-touchscreen-as-Deck-trackpads source mode, whitelist entries for the Nebel
-virtual touchscreen and RP6 paddles nodes.
+replacing or suspending virtual targets. Nebel OS additionally carries the
+touchscreen-as-Deck-trackpads source mode and a whitelist entry for the Nebel
+virtual touchscreen node.
 
 %prep
 %autosetup -n %{appname}-%{commit} -p1
