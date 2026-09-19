@@ -27,8 +27,6 @@ Patch:          0001-cstdint.patch
 # Allow to use system wlroots
 # We use/package rest from the forks, I've tried to verify that wlroots match relevant commits
 # We'll hold on rebases of gamescope if tags diverge in the future
-Patch:          Allow-to-use-system-wlroots.patch
-Patch:          Use-system-stb-glm.patch
 
 BuildRequires:  cmake
 BuildRequires:  catch-devel
