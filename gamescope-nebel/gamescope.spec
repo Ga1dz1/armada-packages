@@ -103,7 +103,9 @@ cp %{SOURCE1} pkgconfig/stb.pc
 # Replace spirv-headers include with the system directory
 sed -i 's^../thirdparty/SPIRV-Headers/include/spirv/^/usr/include/spirv/^' src/meson.build
 
-# Push in reshade and vkroots from sources instead of submodule
+# Push in reshade and vkroots from sources instead of submodule. The nebel
+# tree carries no submodule gitlinks, so the target dirs may not exist yet.
+mkdir -p src/reshade subprojects/vkroots
 tar -xzf %{SOURCE2} --strip-components=1 -C src/reshade
 tar -xzf %{SOURCE3} --strip-components=1 -C subprojects/vkroots
 
