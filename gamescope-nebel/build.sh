@@ -53,7 +53,7 @@ EOF
     sed -i "/^%build$/i %global build_cxxflags %{build_cxxflags} ${ARMADA_MARCH}" ~/rpmbuild/SPECS/gamescope.spec
     # Source0 is pre-staged by the host (the nebel-gamescope tree); spectool
     # only needs to fetch the remaining remote sources (reshade, vkroots).
-    cp "gamescope-${VERSION}.tar.gz" stb.pc 0001-cstdint.patch Allow-to-use-system-wlroots.patch Use-system-stb-glm.patch ~/rpmbuild/SOURCES/
+    cp "gamescope-${VERSION}.tar.gz" stb.pc 0001-cstdint.patch ~/rpmbuild/SOURCES/
     spectool -g -R ~/rpmbuild/SPECS/gamescope.spec
     rpmbuild -bb ~/rpmbuild/SPECS/gamescope.spec
     cp ~/rpmbuild/RPMS/aarch64/*.rpm /work/out/
