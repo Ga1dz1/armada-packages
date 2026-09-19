@@ -13,7 +13,11 @@ mkdir -p out; rm -f out/*
 # Stage the source tarball exactly like a release tarball: the pinned commit,
 # submodules included, git metadata stripped, top dir named for %setup.
 rm -rf src-stage "gamescope-${VERSION}"
-git clone --recursive "${GIT_REPO}" src-stage
+CLONE_URL="${GIT_REPO}"
+if [[ -n "${GH_GAMESCOPE_PULL:-}" ]]; then
+    CLONE_URL="https://x-access-token:${GH_GAMESCOPE_PULL}@github.com/Ga1dz1/nebel-gamescope"
+fi
+git clone --recursive "${CLONE_URL}" src-stage
 git -C src-stage checkout "${GIT_REF}"
 git -C src-stage submodule update --init --recursive
 rm -rf src-stage/.git src-stage/.github

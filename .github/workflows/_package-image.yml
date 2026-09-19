@@ -52,6 +52,10 @@ jobs:
             ccache-${{ inputs.package }}-${{ runner.arch }}-${{ hashFiles('toolchain.env') }}-
 
       - name: Build artifacts
+        env:
+          # Private-source clones inside build.sh (gamescope-nebel pulls
+          # Ga1dz1/nebel-gamescope). Empty for packages that do not use it.
+          GH_GAMESCOPE_PULL: ${{ secrets.GH_GAMESCOPE_PULL }}
         run: cd ${{ inputs.package }} && ./build.sh
 
       - name: Stage image context
